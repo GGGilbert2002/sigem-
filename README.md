@@ -121,6 +121,5 @@ Tras ejecutar `verificar_backend.py`, se crea automáticamente:
 - ✅ Mapas territoriales: **completo y verificado visualmente**
 - ✅ Reportes PDF/Excel: **completo y verificado**
 - ✅ Interfaz gráfica (PyQt6): **completa — login, dashboard, gestión de personal, estadísticas, mapas, reportes**
-- ⏳ Siguiente paso: que ejecutes `python main.py` y revisemos juntos cualquier detalle visual o de usabilidad
 
 ---
