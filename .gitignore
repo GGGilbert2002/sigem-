@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Base de datos local (no se versiona, cada instalación genera la suya)
+database/sigem.db
+database/*.db
+
+# Reportes generados (archivos de salida, no código fuente)
+reports/*.pdf
+reports/*.xlsx
+reports/*.html
+reports/*.png
+
+# Logs
+logs/*.log
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Configuración de editores
+.vscode/
+.idea/

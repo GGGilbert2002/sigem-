@@ -1,0 +1,29 @@
+# =====================================================================
+# SIGEM - Dependencias del proyecto
+# =====================================================================
+# Instalar con:  pip install -r requirements.txt
+#
+# Nota: sqlite3, hashlib, hmac, os, datetime, re son módulos nativos
+# de Python y no requieren instalación.
+
+# Interfaz gráfica de escritorio
+PyQt6>=6.7.1
+PyQt6-WebEngine>=6.7.0
+
+# Análisis de datos y estadística
+pandas>=2.2.3
+numpy>=1.26.4
+
+# Gráficos estadísticos
+matplotlib>=3.9.0
+
+# Mapas territoriales interactivos
+folium>=0.16.0
+branca>=0.7.2
+
+# Exportación de reportes
+openpyxl>=3.1.5
+reportlab>=4.2.2
+
+# Empaquetado final (opcional, para generar el .exe distribuible)
+pyinstaller>=6.9.0
