@@ -124,7 +124,3 @@ Tras ejecutar `verificar_backend.py`, se crea automáticamente:
 - ⏳ Siguiente paso: que ejecutes `python main.py` y revisemos juntos cualquier detalle visual o de usabilidad
 
 ---
-
-## ❓ Si algo falla
-
-Copia el mensaje de error completo (incluyendo el "Traceback") y compártelo. No intentes interpretar el error tú mismo primero — lo revisamos juntos.
