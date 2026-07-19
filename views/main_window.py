@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         items = [
             ("dashboard",    "▦  Dashboard"),
             ("personal",     "👤  Gestión de Personal"),
+            ("registro",     "📝  Registrar Personal"),
             ("estadisticas", "📊  Estadísticas"),
             ("mapas",        "📍  Mapas Territoriales"),
             ("reportes",     "📄  Reportes"),
@@ -114,6 +115,7 @@ class MainWindow(QMainWindow):
     def _cargar_vistas(self) -> None:
         from views.dashboard_view    import DashboardView
         from views.personal_view     import PersonalView
+        from views.registro_view     import RegistroView
         from views.estadisticas_view import EstadisticasView
         from views.mapa_view         import MapaView
         from views.reportes_view     import ReportesView
@@ -121,6 +123,7 @@ class MainWindow(QMainWindow):
         for clave, Clase in [
             ("dashboard",    DashboardView),
             ("personal",     PersonalView),
+            ("registro",     RegistroView),
             ("estadisticas", EstadisticasView),
             ("mapas",        MapaView),
             ("reportes",     ReportesView),
