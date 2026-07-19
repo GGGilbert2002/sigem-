@@ -26,6 +26,8 @@ from PyQt6.QtWidgets import (
 )
 
 from controllers import mapas_controller as mc
+from views.animaciones import aplicar_fade_in
+from views.widgets_carga import IndicadorCarga
 
 logger = logging.getLogger("sigem.mapas")
 
@@ -103,6 +105,7 @@ class MapaView(QWidget):
         self._layout_mapa = QVBoxLayout(self._contenedor_mapa)
         self._layout_mapa.setContentsMargins(0, 0, 0, 0)
         self._layout.addWidget(self._contenedor_mapa, stretch=1)
+        self._indicador = IndicadorCarga(self)
 
     # -------------------------------------------------------------
     def _cambiar_modo(self, modo: str) -> None:
@@ -139,3 +142,7 @@ class MapaView(QWidget):
                 self, "Error",
                 f"No se pudo abrir el mapa interactivo:\n{e}",
             )
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._indicador.resize(self.size())
