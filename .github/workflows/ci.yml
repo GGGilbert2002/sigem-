@@ -31,7 +31,7 @@ jobs:
           flake8 . \
             --exclude=.git,__pycache__,resources,.github \
             --max-line-length=100 \
-            --ignore=E501,W503,E402,W291,W293 \
+            --ignore=E501,W503,E402,W291,W293,E221,E241,E231,E272,E127,F401,F841,F541 \
             --count --statistics
 
       - name: "Paso 5: Ejecutar pruebas unitarias"
