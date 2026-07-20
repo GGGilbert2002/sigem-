@@ -1,194 +1,265 @@
 """
 controllers/graficos_controller.py
 ====================================
-Generación de gráficos estadísticos (barras, tortas, líneas) usando
-matplotlib, a partir de los datos calculados en estadisticas_controller.
-
-Cada función retorna un objeto matplotlib.figure.Figure, NO lo muestra
-ni lo guarda directamente. Esto es intencional: una Figure se puede
-- embeber en PyQt6 mediante FigureCanvasQTAgg (ver views/widgets_graficos.py)
-- guardar como imagen para los reportes PDF (ver utils/exporters.py)
-- mostrarse en modo standalone para pruebas
-
-Paleta de colores alineada con la identidad visual definida en config.py.
+Generación de gráficos con matplotlib, compatible con la estructura
+real de datos que retornan las funciones de estadisticas_controller:
+- distribucion_por_*() → dict {etiqueta: total}
+- tendencia_registros_por_mes() → dict {"YYYY-MM": total}
 """
 
 import matplotlib
-matplotlib.use("Agg")  # Backend sin pantalla; en la app PyQt6 se usa QtAgg (ver views)
-
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-import config
-from controllers import estadisticas_controller as ec
+from controllers.estadisticas_controller import (
+    distribucion_por_rango_edad,
+    distribucion_por_nivel_educativo,
+    distribucion_por_estatus,
+    distribucion_por_municipio,
+    distribucion_por_genero,
+    distribucion_por_parroquia,
+    tendencia_registros_por_mes,
+)
 
-# Paleta de colores consistente en todos los gráficos del sistema
-PALETA = ["#1B4332", "#40916C", "#74C69D", "#D4AF37", "#B08968",
-          "#52796F", "#84A98C", "#CAD2C5", "#2D6A4F", "#95D5B2"]
+# Paleta institucional
+VERDE_OSCURO = "#1B4332"
+VERDE_MEDIO  = "#40916C"
+VERDE_CLARO  = "#74C69D"
+ORO          = "#D4AF37"
+CAFE         = "#B08968"
+GRIS_TEXTO   = "#333333"
+FONDO        = "#FAFAFA"
 
-plt.rcParams["font.size"] = 9
-plt.rcParams["axes.titleweight"] = "bold"
+PALETA = [VERDE_OSCURO, VERDE_MEDIO, VERDE_CLARO, ORO, CAFE,
+          "#52796F", "#84A98C", "#95D5B2", "#2D6A4F", "#081C15"]
 
 
-def _figura_vacia(mensaje: str) -> Figure:
-    """Genera una figura con un mensaje informativo cuando no hay datos
-    suficientes para graficar (evita que la interfaz se rompa o muestre
-    un gráfico en blanco sin explicación)."""
-    fig = Figure(figsize=(6, 4), dpi=100)
+def _figura_base(ancho=7.5, alto=4.2):
+    fig = Figure(figsize=(ancho, alto), dpi=100, facecolor=FONDO)
     ax = fig.add_subplot(111)
-    ax.text(0.5, 0.5, mensaje, ha="center", va="center", fontsize=11,
-             color="#666666", wrap=True)
+    ax.set_facecolor(FONDO)
+    for spine in ["top", "right"]:
+        ax.spines[spine].set_visible(False)
+    ax.spines["left"].set_color("#DDDDDD")
+    ax.spines["bottom"].set_color("#DDDDDD")
+    ax.tick_params(colors=GRIS_TEXTO, labelsize=8.5)
+    return fig, ax
+
+
+def _layout(fig, izq=0.10):
+    fig.tight_layout(pad=2.5, rect=[izq, 0.04, 0.98, 0.96])
+
+
+def _sin_datos(mensaje="Sin datos disponibles"):
+    fig, ax = _figura_base()
+    ax.text(0.5, 0.5, mensaje, ha="center", va="center",
+            fontsize=10, color="#999999")
     ax.axis("off")
     return fig
 
 
-def grafico_distribucion_genero() -> Figure:
-    """Gráfico de torta: distribución por género."""
-    datos = ec.distribucion_por_genero()
+# ─────────────────────────────────────────────────────────────────────
+def grafico_distribucion_municipio() -> Figure:
+    """Barras verticales — participación por municipio (top 10)."""
+    datos = distribucion_por_municipio()   # → {"Miranda": 37, "Colina": 31, ...}
     if not datos:
-        return _figura_vacia("No hay registros de personal para graficar.")
+        return _sin_datos()
 
-    fig = Figure(figsize=(5, 5), dpi=100)
-    ax = fig.add_subplot(111)
-    ax.pie(
-        datos.values(), labels=datos.keys(), autopct="%1.1f%%",
-        colors=PALETA[:len(datos)], startangle=90,
-        wedgeprops={"edgecolor": "white", "linewidth": 1.5},
+    items = sorted(datos.items(), key=lambda x: x[1], reverse=True)[:10]
+    etiquetas = [k for k, _ in items]
+    valores   = [v for _, v in items]
+
+    fig, ax = _figura_base(ancho=8.0, alto=4.8)
+    colores = [VERDE_OSCURO if i == 0 else VERDE_MEDIO for i in range(len(etiquetas))]
+    rects = ax.bar(etiquetas, valores, color=colores, width=0.6, zorder=2)
+
+    for rect in rects:
+        h = rect.get_height()
+        if h > 0:
+            ax.text(rect.get_x() + rect.get_width() / 2, h / 2,
+                    str(int(h)), ha="center", va="center",
+                    color="white", fontsize=9, fontweight="bold")
+
+    ax.set_ylabel("Cantidad de personal", fontsize=9, color=GRIS_TEXTO)
+    ax.set_ylim(0, max(valores) * 1.18)
+    ax.yaxis.grid(True, color="#EEEEEE", zorder=0)
+    ax.set_axisbelow(True)
+    plt.setp(ax.get_xticklabels(), rotation=30, ha="right", fontsize=8.5)
+    _layout(fig, izq=0.08)
+    return fig
+
+
+def grafico_distribucion_genero() -> Figure:
+    """Torta — distribución por género."""
+    datos = distribucion_por_genero()   # → {"Masculino": 126, "Femenino": 124}
+    if not datos:
+        return _sin_datos()
+
+    etiquetas = list(datos.keys())
+    valores   = list(datos.values())
+    colores   = [VERDE_OSCURO, VERDE_MEDIO]
+
+    fig, ax = _figura_base(ancho=5.0, alto=4.2)
+    wedges, texts, autotexts = ax.pie(
+        valores, labels=etiquetas, colors=colores,
+        autopct="%1.1f%%", startangle=90,
+        wedgeprops=dict(linewidth=1.5, edgecolor="white"),
+        textprops=dict(fontsize=9),
     )
-    ax.set_title("Distribución por Género")
-    ax.set_aspect("equal")  # asegura que el círculo no se vea ovalado
-    fig.tight_layout()
+    for at in autotexts:
+        at.set_fontsize(9)
+        at.set_color("white")
+        at.set_fontweight("bold")
+    ax.axis("equal")
+    _layout(fig, izq=0.02)
     return fig
 
 
 def grafico_distribucion_edad() -> Figure:
-    """Gráfico de barras: distribución por rango de edad."""
-    datos = ec.distribucion_por_rango_edad()
+    """Barras verticales — distribución por rango de edad."""
+    datos = distribucion_por_rango_edad()  # → {"18-20": 50, "21-25": 57, ...}
     if not datos:
-        return _figura_vacia("No hay registros de personal para graficar.")
+        return _sin_datos()
 
-    fig = Figure(figsize=(6, 4), dpi=100)
-    ax = fig.add_subplot(111)
-    barras = ax.bar(list(datos.keys()), list(datos.values()), color=PALETA[1])
-    ax.bar_label(barras, padding=3)
-    ax.set_title("Distribución por Rango de Edad")
-    ax.set_xlabel("Rango de edad")
-    ax.set_ylabel("Cantidad de personal")
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout()
+    etiquetas = list(datos.keys())
+    valores   = list(datos.values())
+
+    fig, ax = _figura_base(ancho=7.5, alto=4.4)
+    rects = ax.bar(etiquetas, valores, color=VERDE_MEDIO, width=0.6, zorder=2)
+
+    for rect in rects:
+        h = rect.get_height()
+        if h > 0:
+            ax.text(rect.get_x() + rect.get_width() / 2, h + max(valores) * 0.01,
+                    str(int(h)), ha="center", va="bottom",
+                    color=GRIS_TEXTO, fontsize=9, fontweight="bold")
+
+    ax.set_xlabel("Rango de edad", fontsize=9, color=GRIS_TEXTO)
+    ax.set_ylabel("Cantidad de personal", fontsize=9, color=GRIS_TEXTO)
+    ax.set_ylim(0, max(valores) * 1.20)
+    ax.yaxis.grid(True, color="#EEEEEE", zorder=0)
+    ax.set_axisbelow(True)
+    _layout(fig, izq=0.10)
     return fig
 
 
 def grafico_nivel_educativo() -> Figure:
-    """Gráfico de barras horizontales: distribución por nivel educativo."""
-    datos = ec.distribucion_por_nivel_educativo()
+    """Barras horizontales — nivel educativo (nombres largos)."""
+    datos = distribucion_por_nivel_educativo()  # → {"Técnico Medio": 40, ...}
     if not datos:
-        return _figura_vacia("No hay registros de personal para graficar.")
+        return _sin_datos()
 
-    # Ordenar de mayor a menor para mejor lectura visual
-    datos_ordenados = dict(sorted(datos.items(), key=lambda x: x[1]))
+    items = sorted(datos.items(), key=lambda x: x[1])
+    etiquetas = [k for k, _ in items]
+    valores   = [v for _, v in items]
 
-    fig = Figure(figsize=(6.5, 4.5), dpi=100)
-    ax = fig.add_subplot(111)
-    barras = ax.barh(list(datos_ordenados.keys()), list(datos_ordenados.values()), color=PALETA[2])
-    ax.bar_label(barras, padding=3)
-    ax.set_title("Distribución por Nivel Educativo")
-    ax.set_xlabel("Cantidad de personal")
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout()
-    return fig
+    fig, ax = _figura_base(ancho=7.5, alto=4.6)
+    bars = ax.barh(etiquetas, valores, color=VERDE_MEDIO, height=0.6, zorder=2)
 
+    for bar, valor in zip(bars, valores):
+        ax.text(bar.get_width() + max(valores) * 0.01,
+                bar.get_y() + bar.get_height() / 2,
+                str(int(valor)), va="center", ha="left",
+                fontsize=9, color=GRIS_TEXTO, fontweight="bold")
 
-def grafico_distribucion_municipio(top_n: int = 10) -> Figure:
-    """Gráfico de barras: municipios con mayor cantidad de registros (top_n)."""
-    datos = ec.distribucion_por_municipio()
-    if not datos:
-        return _figura_vacia("No hay registros de personal para graficar.")
-
-    top = dict(list(datos.items())[:top_n])
-
-    fig = Figure(figsize=(7, 4.5), dpi=100)
-    ax = fig.add_subplot(111)
-    barras = ax.bar(list(top.keys()), list(top.values()), color=PALETA[0])
-    ax.bar_label(barras, padding=3)
-    ax.set_title(f"Participación por Municipio (Top {top_n})")
-    ax.set_ylabel("Cantidad de personal")
-    ax.tick_params(axis="x", rotation=35)
-    for label in ax.get_xticklabels():
-        label.set_ha("right")
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout()
-    return fig
-
-
-def grafico_distribucion_parroquia(municipio: str) -> Figure:
-    """Gráfico de barras: distribución de registros por parroquia de un municipio específico."""
-    datos = ec.distribucion_por_parroquia(municipio=municipio)
-    if not datos:
-        return _figura_vacia(f"No hay registros para el municipio '{municipio}'.")
-
-    fig = Figure(figsize=(6.5, 4.5), dpi=100)
-    ax = fig.add_subplot(111)
-    barras = ax.bar(list(datos.keys()), list(datos.values()), color=PALETA[4])
-    ax.bar_label(barras, padding=3)
-    ax.set_title(f"Participación por Parroquia — Municipio {municipio}")
-    ax.set_ylabel("Cantidad de personal")
-    ax.tick_params(axis="x", rotation=30)
-    for label in ax.get_xticklabels():
-        label.set_ha("right")
-    ax.spines[["top", "right"]].set_visible(False)
-    fig.tight_layout()
+    ax.set_xlabel("Cantidad de personal", fontsize=9, color=GRIS_TEXTO)
+    ax.set_xlim(0, max(valores) * 1.22)
+    ax.xaxis.grid(True, color="#EEEEEE", zorder=0)
+    ax.set_axisbelow(True)
+    ax.tick_params(axis="y", labelsize=8.5)
+    # Margen izquierdo amplio para nombres largos como "Técnico Medio"
+    _layout(fig, izq=0.34)
     return fig
 
 
 def grafico_distribucion_estatus() -> Figure:
-    """Gráfico de torta: distribución por estatus de participación/reclutamiento."""
-    datos = ec.distribucion_por_estatus()
+    """Torta — estatus de participación."""
+    datos = distribucion_por_estatus()  # → {"Incorporado": 32, "Diferido": 41, ...}
     if not datos:
-        return _figura_vacia("No hay registros de personal para graficar.")
+        return _sin_datos()
 
-    fig = Figure(figsize=(6, 6), dpi=100)
-    ax = fig.add_subplot(111)
-    ax.pie(
-        datos.values(), labels=datos.keys(), autopct="%1.1f%%",
-        colors=PALETA[:len(datos)], startangle=90,
-        wedgeprops={"edgecolor": "white", "linewidth": 1.5},
+    etiquetas = list(datos.keys())
+    valores   = list(datos.values())
+    colores   = (PALETA * 3)[:len(etiquetas)]
+
+    fig, ax = _figura_base(ancho=5.5, alto=4.6)
+    wedges, texts, autotexts = ax.pie(
+        valores, labels=etiquetas, colors=colores,
+        autopct="%1.1f%%", startangle=140,
+        wedgeprops=dict(linewidth=1.2, edgecolor="white"),
+        textprops=dict(fontsize=7.5),
+        pctdistance=0.78,
     )
-    ax.set_title("Distribución por Estatus de Participación")
-    ax.set_aspect("equal")
-    fig.tight_layout()
+    for at in autotexts:
+        at.set_fontsize(7.5)
+        at.set_fontweight("bold")
+        at.set_color("white")
+    ax.axis("equal")
+    _layout(fig, izq=0.02)
+    return fig
+
+
+def grafico_distribucion_parroquia(municipio: str = "Miranda") -> Figure:
+    """Barras verticales — participación por parroquia."""
+    datos = distribucion_por_parroquia(municipio=municipio)
+    # puede retornar dict {"Parroquia X": 11, ...}
+    if not datos:
+        return _sin_datos(f"Sin datos para el municipio {municipio}")
+
+    items = sorted(datos.items(), key=lambda x: x[1], reverse=True)[:10]
+    etiquetas = [k for k, _ in items]
+    valores   = [v for _, v in items]
+
+    fig, ax = _figura_base(ancho=7.5, alto=4.6)
+    colores = [VERDE_OSCURO if i == 0 else CAFE for i in range(len(etiquetas))]
+    rects = ax.bar(etiquetas, valores, color=colores, width=0.6, zorder=2)
+
+    for rect in rects:
+        h = rect.get_height()
+        if h > 0:
+            ax.text(rect.get_x() + rect.get_width() / 2,
+                    h + max(valores) * 0.01,
+                    str(int(h)), ha="center", va="bottom",
+                    color=GRIS_TEXTO, fontsize=9, fontweight="bold")
+
+    ax.set_ylabel("Cantidad de personal", fontsize=9, color=GRIS_TEXTO)
+    ax.set_ylim(0, max(valores) * 1.20)
+    ax.yaxis.grid(True, color="#EEEEEE", zorder=0)
+    ax.set_axisbelow(True)
+    plt.setp(ax.get_xticklabels(), rotation=35, ha="right", fontsize=7.5)
+    _layout(fig, izq=0.10)
     return fig
 
 
 def grafico_tendencia_temporal() -> Figure:
-    """Gráfico de líneas: tendencia de registros de participación a lo largo del tiempo."""
-    datos = ec.tendencia_registros_por_mes()
+    """Línea de tendencia de registros por mes."""
+    datos = tendencia_registros_por_mes()  # → {"2025-01": 8, "2025-02": 10, ...}
     if not datos:
-        return _figura_vacia("No hay registros de personal para graficar.")
+        return _sin_datos()
 
-    fig = Figure(figsize=(7, 4), dpi=100)
-    ax = fig.add_subplot(111)
-    ax.plot(list(datos.keys()), list(datos.values()), marker="o",
-            color=PALETA[0], linewidth=2, markersize=5)
-    ax.fill_between(list(datos.keys()), list(datos.values()), alpha=0.15, color=PALETA[0])
-    ax.set_title("Tendencia de Registros de Participación por Mes")
-    ax.set_ylabel("Cantidad de registros")
-    ax.tick_params(axis="x", rotation=45)
-    for label in ax.get_xticklabels():
-        label.set_ha("right")
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
+    periodos = list(datos.keys())
+    valores  = list(datos.values())
+    x = list(range(len(periodos)))
+
+    fig, ax = _figura_base(ancho=8.5, alto=3.8)
+    ax.fill_between(x, valores, alpha=0.12, color=VERDE_MEDIO)
+    ax.plot(x, valores, color=VERDE_OSCURO, linewidth=2.2,
+            marker="o", markersize=5,
+            markerfacecolor=VERDE_MEDIO,
+            markeredgecolor="white", markeredgewidth=1.2, zorder=3)
+
+    for xi, yi in zip(x, valores):
+        ax.annotate(str(yi), (xi, yi),
+                    textcoords="offset points", xytext=(0, 7),
+                    ha="center", fontsize=7.5,
+                    color=GRIS_TEXTO, fontweight="bold")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(periodos, rotation=45, ha="right", fontsize=7.5)
+    ax.set_ylabel("Registros", fontsize=9, color=GRIS_TEXTO)
+    ax.set_ylim(0, max(valores) * 1.28)
+    ax.yaxis.grid(True, color="#EEEEEE", zorder=0)
+    ax.set_axisbelow(True)
+    _layout(fig, izq=0.08)
     return fig
-
-
-def guardar_figura_temporal(fig: Figure, nombre_archivo: str) -> str:
-    """
-    Guarda una figura como imagen PNG en la carpeta de reportes, para
-    ser incrustada posteriormente en un PDF (ver utils/exporters.py).
-    Retorna la ruta completa del archivo generado.
-    """
-    import os
-    ruta = os.path.join(config.REPORTS_DIR, nombre_archivo)
-    fig.savefig(ruta, dpi=150, bbox_inches="tight")
-    return ruta
