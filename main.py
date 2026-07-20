@@ -4,63 +4,40 @@ main.py
 Punto de entrada de la aplicación SIGEM.
 
 Ejecutar con:
-    python main.py
+    py -3.14 main.py
 
 Flujo de arranque:
-1. Inicializa la base de datos (crea el esquema si no existe, aplica
-   migraciones pendientes).
-2. Si es la primera vez que se ejecuta el sistema (no hay usuarios ni
-   datos), carga los datos semilla (municipios reales + datos
-   ficticios de personal) y crea el usuario administrador por defecto.
-3. Abre la ventana de login.
+1. Configura el sistema de logging estructurado (JSON en archivo,
+   legible en consola) — requerimiento Avance #6 Trazabilidad.
+2. Inicializa la base de datos (crea el esquema si no existe).
+3. Si es la primera ejecución, carga los datos semilla y crea el
+   usuario administrador por defecto (admin/admin123).
+4. Abre la ventana de login.
 """
 
 import os
+import sys
 
-# IMPORTANTE: estas variables de entorno deben configurarse ANTES de
-# importar cualquier módulo de PyQt6 (incluyendo QtCore/QtWidgets),
-# porque QtWebEngine lee esta configuración al cargar su motor interno
-# de Chromium. Se usan para forzar un modo de renderizado por software,
-# ya que en algunos equipos Windows (especialmente con drivers de video
-# antiguos, máquinas virtuales, o ciertas tarjetas integradas) la
-# aceleración por GPU dentro de QtWebEngine causa que la página cargue
-# en blanco (sin teselas de mapa) aunque el HTML sea válido — el mismo
-# archivo sí se ve bien en un navegador normal porque ese usa su propia
-# configuración de GPU, independiente de la de la aplicación.
+# IMPORTANTE: configurar ANTES de importar PyQt6 (requerido por QtWebEngine)
 os.environ.setdefault(
     "QTWEBENGINE_CHROMIUM_FLAGS",
     "--disable-gpu --disable-gpu-compositing --disable-gpu-sandbox "
     "--no-sandbox --disable-dev-shm-usage",
 )
 
-import logging
-import sys
+from utils.logger import configurar_logging, get_logger
 
-from PyQt6.QtWidgets import QApplication
+# Configurar logging al inicio, antes que cualquier otro módulo
+configurar_logging()
+logger = get_logger("sigem.main")
 
 import config
 
 
-def _configurar_logging() -> None:
-    import os
-
-    ruta_log = os.path.join(config.LOGS_DIR, "sigem.log")
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[
-            logging.FileHandler(ruta_log, encoding="utf-8"),
-            logging.StreamHandler(sys.stdout),
-        ],
-    )
-
-
 def _preparar_datos_iniciales() -> None:
     """
-    Inicializa el esquema de base de datos y, si es la primera
-    ejecución del sistema, carga los datos semilla (municipios reales,
-    catálogos, datos ficticios de personal) y crea el usuario
-    administrador por defecto.
+    Inicializa el esquema de BD y carga los datos semilla en la
+    primera ejecución. Operación idempotente (segura de repetir).
     """
     from database.connection import inicializar_base_datos
     from database.seed_data import ejecutar_seed
@@ -71,39 +48,35 @@ def _preparar_datos_iniciales() -> None:
 
     if not existe_algun_usuario():
         crear_usuario("admin", "Administrador del Sistema", "admin123")
-        logging.getLogger("sigem.main").info(
-            "Usuario administrador creado por defecto (usuario: admin / contraseña: admin123)."
+        logger.info(
+            "Usuario administrador creado por defecto",
+            extra={"usuario": "admin", "accion": "primer_arranque"}
         )
 
 
 def main() -> None:
-    _configurar_logging()
-    logger = logging.getLogger("sigem.main")
-    logger.info("Iniciando SIGEM v%s", config.VERSION)
+    logger.info(
+        "Iniciando SIGEM",
+        extra={"version": config.VERSION, "entorno": os.environ.get("SIGEM_ENV", "development")}
+    )
 
     try:
         _preparar_datos_iniciales()
     except Exception:
-        logger.exception("Error crítico al preparar los datos iniciales.")
-        raise
+        logger.exception("Error critico al preparar los datos iniciales")
+        sys.exit(1)
 
-    # IMPORTANTE: este atributo debe configurarse ANTES de crear el
-    # QApplication. Es requerido por QtWebEngine (usado en la pantalla
-    # de Mapas Territoriales para mostrar los mapas de Folium). Si no
-    # se configura aquí, QtWebEngine muestra advertencias en consola
-    # y puede comportarse de forma inestable en algunos sistemas.
-    from PyQt6.QtCore import Qt, QCoreApplication
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtWidgets import QApplication
 
-    QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
-
-    app = QApplication(sys.argv)
-    app.setStyleSheet("")  # los estilos se aplican por ventana (ver views/estilos.py)
+    QApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+    app = QApplication(sys.argv if sys.argv else ["sigem"])
 
     from views.login_window import LoginWindow
-
     ventana_login = LoginWindow()
     ventana_login.show()
 
+    logger.info("Interfaz grafica iniciada correctamente")
     sys.exit(app.exec())
 
 
