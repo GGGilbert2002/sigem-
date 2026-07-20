@@ -1,0 +1,40 @@
+name: CI — Verificacion de Codigo SIGEM
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  verificar:
+    name: Linter + Pruebas Unitarias
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Paso 1: Descargar codigo del repositorio"
+        uses: actions/checkout@v4
+
+      - name: "Paso 2: Configurar Python 3.12"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "Paso 3: Instalar dependencias"
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          pip install pandas numpy matplotlib folium branca openpyxl reportlab
+
+      - name: "Paso 4: Verificar sintaxis con flake8"
+        run: |
+          flake8 . \
+            --exclude=.git,__pycache__,resources,.github \
+            --max-line-length=100 \
+            --ignore=E501,W503,E402,W291,W293 \
+            --count --statistics
+
+      - name: "Paso 5: Ejecutar pruebas unitarias"
+        run: python -m pytest tests/test_sigem.py -v --tb=short
+        env:
+          SIGEM_ENV: ci
