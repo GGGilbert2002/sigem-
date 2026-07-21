@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Mapas Territoriales{% endblock %}
+{% block contenido %}
+<div class="page-header">
+    <h2>Mapas Territoriales</h2>
+    <span>Georreferenciación — Edo. Falcón</span>
+</div>
+<div class="tab-btns">
+    <a href="/mapas?modo=municipios" class="tab-btn {% if modo=='municipios' %}active{% endif %}">Municipios</a>
+    <a href="/mapas?modo=parroquias" class="tab-btn {% if modo=='parroquias' %}active{% endif %}">Parroquias</a>
+    <a href="/mapas?modo=calor" class="tab-btn {% if modo=='calor' %}active{% endif %}">Mapa de Calor</a>
+</div>
+<div class="panel">
+    <p style="font-size:11.5px;color:#888;margin-bottom:12px">
+        Vista previa del territorio con datos de participación superpuestos.
+    </p>
+    <img src="data:image/png;base64,{{ img_preview }}" alt="Mapa {{ modo }}" style="width:100%;border-radius:6px">
+</div>
+{% endblock %}

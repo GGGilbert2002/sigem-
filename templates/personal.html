@@ -3,32 +3,41 @@
 {% block contenido %}
 <div class="page-header">
     <h2>Gestión de Personal</h2>
-    <span>{{ registros|length }} registro(s) encontrado(s)</span>
+    <span>{{ registros|length }} registro(s)</span>
 </div>
 <form class="toolbar" method="GET">
     <input type="text" name="q" placeholder="Buscar por cédula, nombre o apellido..." value="{{ busqueda }}">
-    <button type="submit">Buscar</button>
+    <select name="municipio">
+        <option value="">Municipio: Todos</option>
+        {% for m in municipios %}
+        <option value="{{ m.id_municipio }}" {% if municipio_sel == m.id_municipio %}selected{% endif %}>{{ m.nombre }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Buscar</button>
+    <a href="/personal/nuevo" class="btn btn-primary">+ Nuevo Registro</a>
 </form>
 <table>
-    <thead>
-        <tr>
-            <th>Cédula</th><th>Nombre</th><th>Edad</th>
-            <th>Género</th><th>Municipio</th><th>Estatus</th>
-        </tr>
-    </thead>
+    <thead><tr><th>Cédula</th><th>Nombre</th><th>Edad</th><th>Género</th><th>Municipio</th><th>Estatus</th><th>Acciones</th></tr></thead>
     <tbody>
-        {% for r in registros %}
-        <tr>
-            <td>{{ r.cedula }}</td>
-            <td>{{ r.nombres }} {{ r.apellidos }}</td>
-            <td>{{ r.edad }}</td>
-            <td>{{ r.genero }}</td>
-            <td>{{ r.municipio }}</td>
-            <td><span class="badge badge-ok">{{ r.estatus }}</span></td>
-        </tr>
-        {% else %}
-        <tr><td colspan="6" style="text-align:center;color:#999;padding:20px">Sin resultados</td></tr>
-        {% endfor %}
+    {% for r in registros %}
+    <tr>
+        <td>{{ r.cedula }}</td>
+        <td>{{ r.nombres }} {{ r.apellidos }}</td>
+        <td>{{ r.edad }}</td>
+        <td>{{ r.genero }}</td>
+        <td>{{ r.municipio }}</td>
+        <td><span class="badge badge-ok">{{ r.estatus }}</span></td>
+        <td>
+            <a href="/personal/editar/{{ r.id_personal }}" class="btn btn-secondary btn-sm">✏️ Editar</a>
+            <form method="POST" action="/personal/eliminar/{{ r.id_personal }}" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar el registro de {{ r.nombres }} {{ r.apellidos }}?')">
+                <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+            </form>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:#999;padding:20px">Sin resultados</td></tr>
+    {% endfor %}
     </tbody>
 </table>
 {% endblock %}

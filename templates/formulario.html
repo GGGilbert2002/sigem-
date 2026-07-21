@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<div class="page-header"><h2>{{ titulo }}</h2></div>
+{% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+<div class="panel">
+<form method="POST">
+    <p class="seccion-titulo">Datos Personales</p>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Cédula <span class="req">*</span></label>
+            <input type="text" name="cedula" value="{{ registro.cedula if registro else '' }}" placeholder="Ej: 12345678" required>
+        </div>
+        <div class="form-group">
+            <label>Nombres <span class="req">*</span></label>
+            <input type="text" name="nombres" value="{{ registro.nombres if registro else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Apellidos <span class="req">*</span></label>
+            <input type="text" name="apellidos" value="{{ registro.apellidos if registro else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Fecha de nacimiento <span class="req">*</span></label>
+            <input type="date" name="fecha_nacimiento" value="{{ registro.fecha_nacimiento if registro else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>Género <span class="req">*</span></label>
+            <select name="genero" required>
+                <option value="Masculino" {% if registro and registro.genero=='Masculino' %}selected{% endif %}>Masculino</option>
+                <option value="Femenino" {% if registro and registro.genero=='Femenino' %}selected{% endif %}>Femenino</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" name="telefono" value="{{ registro.telefono if registro else '' }}" placeholder="Ej: 0414-1234567">
+        </div>
+    </div>
+
+    <p class="seccion-titulo">Ubicación Territorial</p>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Municipio <span class="req">*</span></label>
+            <select name="id_municipio" id="sel_municipio" required onchange="cargarParroquias(this.value)">
+                <option value="">Seleccionar...</option>
+                {% for m in municipios %}
+                <option value="{{ m.id_municipio }}" {% if registro and registro.id_municipio==m.id_municipio %}selected{% endif %}>{{ m.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Parroquia</label>
+            <select name="id_parroquia" id="sel_parroquia">
+                <option value="">Sin especificar</option>
+                {% if registro and registro.id_parroquia %}
+                <option value="{{ registro.id_parroquia }}" selected>{{ registro.parroquia if registro.parroquia else '' }}</option>
+                {% endif %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Dirección</label>
+            <input type="text" name="direccion" value="{{ registro.direccion if registro else '' }}">
+        </div>
+    </div>
+
+    <p class="seccion-titulo">Datos Militares y de Participación</p>
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Nivel educativo</label>
+            <select name="id_nivel_educativo">
+                <option value="">Sin especificar</option>
+                {% for id_n, desc in niveles %}
+                <option value="{{ id_n }}" {% if registro and registro.id_nivel_educativo==id_n %}selected{% endif %}>{{ desc }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Grado militar</label>
+            <select name="id_grado">
+                <option value="">Sin especificar</option>
+                {% for id_g, nombre in grados %}
+                <option value="{{ id_g }}" {% if registro and registro.id_grado==id_g %}selected{% endif %}>{{ nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Estatus de participación <span class="req">*</span></label>
+            <select name="id_estatus" required>
+                <option value="">Seleccionar...</option>
+                {% for id_e, desc in estatus_lista %}
+                <option value="{{ id_e }}" {% if registro and registro.id_estatus==id_e %}selected{% endif %}>{{ desc }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="form-group" style="margin-bottom:20px">
+        <label>Observaciones</label>
+        <textarea name="observaciones">{{ registro.observaciones if registro else '' }}</textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+        <a href="/personal" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">💾 Guardar Registro</button>
+    </div>
+</form>
+</div>
+<script>
+function cargarParroquias(id_municipio) {
+    const sel = document.getElementById('sel_parroquia');
+    sel.innerHTML = '<option value="">Sin especificar</option>';
+    if (!id_municipio) return;
+    fetch('/api/parroquias/' + id_municipio)
+        .then(r => r.json())
+        .then(data => {
+            data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id; opt.textContent = p.nombre;
+                sel.appendChild(opt);
+            });
+        });
+}
+// Cargar parroquias si ya hay municipio seleccionado (modo edición)
+window.onload = () => {
+    const sel = document.getElementById('sel_municipio');
+    if (sel.value) cargarParroquias(sel.value);
+};
+</script>
+{% endblock %}
