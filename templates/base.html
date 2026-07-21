@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGEM — {% block titulo %}Sistema de Análisis{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #F5F5F0; color: #333; display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 220px; background: #1B4332; color: white; display: flex; flex-direction: column; padding: 18px 0; flex-shrink: 0; }
+        .sidebar .brand { padding: 0 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+        .sidebar .brand h1 { font-size: 15px; font-weight: 700; }
+        .sidebar .brand p { font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 4px; line-height: 1.4; }
+        .sidebar nav { margin-top: 10px; flex: 1; }
+        .sidebar nav a { display: block; padding: 11px 20px; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: background 0.15s; }
+        .sidebar nav a:hover { background: rgba(255,255,255,0.08); }
+        .sidebar nav a.active { background: rgba(255,255,255,0.12); border-left-color: #D4AF37; color: white; font-weight: 600; }
+        .sidebar .user-box { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.12); font-size: 11px; color: rgba(255,255,255,0.7); }
+        .sidebar .user-box a { color: #D4AF37; text-decoration: none; display: block; margin-top: 4px; }
+
+        /* Contenido */
+        .content { flex: 1; padding: 28px; overflow-y: auto; }
+        .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+        .page-header h2 { font-size: 20px; font-weight: 700; color: #1B4332; }
+        .page-header span { font-size: 12px; color: #999; }
+
+        /* KPI Cards */
+        .kpi-row { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+        .kpi-card { background: white; border: 1px solid #E5E5DD; border-top: 3px solid #40916C; border-radius: 6px; padding: 14px 16px; flex: 1; min-width: 150px; }
+        .kpi-card .valor { font-size: 24px; font-weight: 700; color: #1B4332; }
+        .kpi-card .label { font-size: 11px; color: #888; margin-top: 2px; }
+
+        /* Paneles */
+        .panel { background: white; border: 1px solid #DDD; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .panel h3 { font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 12px; }
+        .panel-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+        .panel-row .panel { flex: 1; min-width: 280px; }
+        .panel img { width: 100%; height: auto; border-radius: 4px; }
+
+        /* Tabla */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th { background: #1B4332; color: white; padding: 10px 12px; text-align: left; font-size: 12px; }
+        td { padding: 9px 12px; border-bottom: 1px solid #EEE; font-size: 12.5px; }
+        tr:nth-child(even) { background: #FAFAFA; }
+
+        /* Búsqueda */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 14px; }
+        .toolbar input { flex: 1; padding: 8px 12px; border: 1px solid #CCC; border-radius: 6px; font-size: 13px; }
+        .toolbar button { padding: 8px 16px; background: #1B4332; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        /* Badge estatus */
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 600; }
+        .badge-ok { background: #E3F3EA; color: #1B4332; }
+        .badge-warn { background: #FBF0D8; color: #8A6D11; }
+        .badge-bad { background: #FBE3E3; color: #A32D2D; }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <h1>SIGEM</h1>
+        <p>Btn. Inf. Mec. "Cnel. Atanasio Girardot"</p>
+    </div>
+    <nav>
+        <a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">▦  Dashboard</a>
+        <a href="/personal" class="{% if request.path == '/personal' %}active{% endif %}">👤  Gestión de Personal</a>
+        <a href="/estadisticas" class="{% if request.path == '/estadisticas' %}active{% endif %}">📊  Estadísticas</a>
+    </nav>
+    <div class="user-box">
+        Sesión: <strong style="color:white">{{ usuario }}</strong>
+        <a href="/logout">Cerrar sesión</a>
+    </div>
+</div>
+<div class="content">
+    {% block contenido %}{% endblock %}
+</div>
+</body>
+</html>

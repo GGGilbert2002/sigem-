@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard{% endblock %}
+{% block contenido %}
+<div class="page-header">
+    <h2>Dashboard General</h2>
+    <span>Sistema de Análisis Estadístico y Territorial</span>
+</div>
+<div class="kpi-row">
+    <div class="kpi-card">
+        <div class="valor">{{ resumen.total_registros }}</div>
+        <div class="label">Total de registros</div>
+    </div>
+    <div class="kpi-card">
+        <div class="valor">{{ resumen.total_masculino }} / {{ resumen.total_femenino }}</div>
+        <div class="label">Masculino / Femenino</div>
+    </div>
+    <div class="kpi-card">
+        <div class="valor">{{ resumen.edad_promedio }}</div>
+        <div class="label">Edad promedio</div>
+    </div>
+    <div class="kpi-card">
+        <div class="valor">{{ resumen.total_municipios_con_registros }}</div>
+        <div class="label">Municipios con registros</div>
+    </div>
+</div>
+<div class="panel-row">
+    <div class="panel">
+        <h3>Participación por Municipio</h3>
+        <img src="data:image/png;base64,{{ img_municipio }}" alt="Gráfico municipios">
+    </div>
+    <div class="panel">
+        <h3>Distribución por Género</h3>
+        <img src="data:image/png;base64,{{ img_genero }}" alt="Gráfico género">
+    </div>
+</div>
+{% endblock %}

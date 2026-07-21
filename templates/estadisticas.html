@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titulo %}Estadísticas{% endblock %}
+{% block contenido %}
+<div class="page-header">
+    <h2>Estadísticas</h2>
+    <span>Análisis demográfico y territorial</span>
+</div>
+<div class="panel-row">
+    <div class="panel">
+        <h3>Distribución por Rango de Edad</h3>
+        <img src="data:image/png;base64,{{ graficos.edad }}" alt="Edad">
+    </div>
+    <div class="panel">
+        <h3>Nivel Educativo</h3>
+        <img src="data:image/png;base64,{{ graficos.nivel }}" alt="Nivel educativo">
+    </div>
+</div>
+<div class="panel-row">
+    <div class="panel">
+        <h3>Estatus de Participación</h3>
+        <img src="data:image/png;base64,{{ graficos.estatus }}" alt="Estatus">
+    </div>
+    <div class="panel">
+        <h3>Participación por Parroquia — Miranda</h3>
+        <img src="data:image/png;base64,{{ graficos.parroquia }}" alt="Parroquia">
+    </div>
+</div>
+<div class="panel">
+    <h3>Tendencia de Registros por Mes</h3>
+    <img src="data:image/png;base64,{{ graficos.tendencia }}" alt="Tendencia">
+</div>
+{% endblock %}

@@ -1,12 +1,8 @@
 # =====================================================================
 # SIGEM - Dependencias del proyecto
 # =====================================================================
-# Instalar con:  pip install -r requirements.txt
-#
-# Nota: sqlite3, hashlib, hmac, os, datetime, re son módulos nativos
-# de Python y no requieren instalación.
 
-# Interfaz gráfica de escritorio
+# Interfaz gráfica de escritorio (solo para app local)
 PyQt6>=6.7.1
 PyQt6-WebEngine>=6.7.0
 
@@ -25,5 +21,8 @@ branca>=0.7.2
 openpyxl>=3.1.5
 reportlab>=4.2.2
 
-# Empaquetado final (opcional, para generar el .exe distribuible)
+# Versión web (Railway)
+flask>=3.0.0
+
+# Empaquetado final (opcional)
 pyinstaller>=6.9.0
