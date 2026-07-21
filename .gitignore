@@ -26,3 +26,5 @@ Thumbs.db
 .idea/
 diag_*.py 
 diag_*.html 
+.env 
+.env 

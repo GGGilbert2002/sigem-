@@ -1,14 +1,23 @@
 """
 views/estadisticas_view.py
 ============================
-Vista de estadísticas con indicador de carga y fade-in al mostrar.
+Vista de estadísticas con paneles de altura mínima garantizada,
+indicador de carga y fade-in al mostrar.
+
+Correcciones visuales (07/2026):
+- Cada panel tiene setMinimumHeight(320) para que los gráficos
+  tengan espacio suficiente y no se vean comprimidos.
+- El título del panel es el único título visible — graficos_controller
+  ya no genera títulos internos de matplotlib para evitar duplicación.
+- QScrollArea con widgetResizable para poder hacer scroll si la
+  ventana es pequeña.
 """
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from PyQt6.QtCore import QThread, pyqtSignal
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QScrollArea,
-    QVBoxLayout, QWidget,
+    QSizePolicy, QVBoxLayout, QWidget,
 )
 
 from controllers import graficos_controller as gc
@@ -17,18 +26,18 @@ from views.widgets_carga import IndicadorCarga
 
 
 class _WorkerEstadisticas(QThread):
-    figura_lista = pyqtSignal(str, object)   # (nombre_panel, figura)
+    figura_lista = pyqtSignal(str, object)
     terminado    = pyqtSignal()
     error        = pyqtSignal(str)
 
     def run(self) -> None:
         try:
             tareas = [
-                ("edad",             gc.grafico_distribucion_edad),
-                ("nivel_educativo",  gc.grafico_nivel_educativo),
-                ("estatus",          gc.grafico_distribucion_estatus),
-                ("parroquia",        lambda: gc.grafico_distribucion_parroquia("Miranda")),
-                ("tendencia",        gc.grafico_tendencia_temporal),
+                ("edad",            gc.grafico_distribucion_edad),
+                ("nivel_educativo", gc.grafico_nivel_educativo),
+                ("estatus",         gc.grafico_distribucion_estatus),
+                ("parroquia",       lambda: gc.grafico_distribucion_parroquia("Miranda")),
+                ("tendencia",       gc.grafico_tendencia_temporal),
             ]
             for nombre, fn in tareas:
                 self.figura_lista.emit(nombre, fn())
@@ -38,17 +47,24 @@ class _WorkerEstadisticas(QThread):
 
 
 class PanelEstad(QFrame):
-    def __init__(self, titulo: str):
+    def __init__(self, titulo: str, alto_minimo: int = 320):
         super().__init__()
         self.setStyleSheet(
             "QFrame { background-color: white; border: 1px solid #DDDDDD; "
             "border-radius: 8px; }"
         )
+        self.setMinimumHeight(alto_minimo)
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
         self._layout = QVBoxLayout(self)
-        self._layout.setContentsMargins(16, 14, 16, 14)
+        self._layout.setContentsMargins(14, 12, 14, 12)
+        self._layout.setSpacing(6)
+
         lbl = QLabel(titulo)
         lbl.setStyleSheet(
-            "color: #1B4332; font-size: 13px; font-weight: 700; border: none;"
+            "color: #1B4332; font-size: 13px; font-weight: 700; "
+            "border: none; background: transparent;"
         )
         self._layout.addWidget(lbl)
         self._canvas = None
@@ -58,6 +74,9 @@ class PanelEstad(QFrame):
             self._layout.removeWidget(self._canvas)
             self._canvas.deleteLater()
         self._canvas = FigureCanvasQTAgg(figura)
+        self._canvas.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self._layout.addWidget(self._canvas)
 
 
@@ -75,6 +94,7 @@ class EstadisticasView(QWidget):
         layout_raiz.setContentsMargins(28, 22, 28, 22)
         layout_raiz.setSpacing(14)
 
+        # Encabezado
         fila_enc = QHBoxLayout()
         titulo = QLabel("Estadísticas")
         titulo.setObjectName("tituloVista")
@@ -85,30 +105,46 @@ class EstadisticasView(QWidget):
         fila_enc.addWidget(subtitulo)
         layout_raiz.addLayout(fila_enc)
 
-        # Área de scroll para los gráficos
+        # Scroll con los paneles de gráficos
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
+        scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+        )
+
         contenedor = QWidget()
         contenedor.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(contenedor)
-        layout.setSpacing(14)
+        layout.setContentsMargins(0, 0, 6, 6)
+        layout.setSpacing(16)
 
-        def _fila(*claves_titulos):
+        def _fila(*pares, alto=320):
             fila = QHBoxLayout()
-            fila.setSpacing(14)
-            for clave, titulo_panel in claves_titulos:
-                panel = PanelEstad(titulo_panel)
+            fila.setSpacing(16)
+            for clave, titulo_panel in pares:
+                panel = PanelEstad(titulo_panel, alto_minimo=alto)
                 self._paneles[clave] = panel
                 fila.addWidget(panel)
             layout.addLayout(fila)
 
-        _fila(("edad", "Rango de Edad"),
-              ("nivel_educativo", "Nivel Educativo"))
-        _fila(("estatus", "Estatus de Participación"),
-              ("parroquia", "Participación por Parroquia (Miranda)"))
-        _fila(("tendencia", "Tendencia de Registros por Mes"),)
+        # Fila 1: Rango de edad + Nivel educativo
+        _fila(
+            ("edad",            "Distribución por Rango de Edad"),
+            ("nivel_educativo", "Nivel Educativo"),
+            alto=340,
+        )
+        # Fila 2: Estatus + Parroquia
+        _fila(
+            ("estatus",   "Estatus de Participación"),
+            ("parroquia", "Participación por Parroquia — Municipio Miranda"),
+            alto=360,
+        )
+        # Tendencia: panel ancho
+        panel_tend = PanelEstad("Tendencia de Registros por Mes", alto_minimo=300)
+        self._paneles["tendencia"] = panel_tend
+        layout.addWidget(panel_tend)
 
+        layout.addStretch()
         scroll.setWidget(contenedor)
         layout_raiz.addWidget(scroll)
 
@@ -117,7 +153,10 @@ class EstadisticasView(QWidget):
     def refrescar(self) -> None:
         if self._worker and self._worker.isRunning():
             return
-        self._indicador.mostrar("Calculando estadísticas...", "Procesando datos de participación")
+        self._indicador.mostrar(
+            "Calculando estadísticas...",
+            "Procesando datos de participación"
+        )
         self._worker = _WorkerEstadisticas()
         self._worker.figura_lista.connect(self._recibir_figura)
         self._worker.terminado.connect(self._al_terminar)

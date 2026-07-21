@@ -53,12 +53,15 @@ class MainWindow(QMainWindow):
 
         # Marca
         marca = QWidget()
+        marca.setStyleSheet("background: transparent;")
         lm = QVBoxLayout(marca)
         lm.setContentsMargins(20, 0, 20, 18)
         nombre = QLabel("SIGEM")
         nombre.setObjectName("sidebarNombre")
+        nombre.setStyleSheet("background: transparent; color: white; font-size: 14px; font-weight: 700;")
         unidad = QLabel(config.UNIDAD_MILITAR)
         unidad.setObjectName("sidebarUnidad")
+        unidad.setStyleSheet("background: transparent; color: rgba(255,255,255,0.65); font-size: 10px;")
         unidad.setWordWrap(True)
         lm.addWidget(nombre)
         lm.addWidget(unidad)
@@ -96,15 +99,18 @@ class MainWindow(QMainWindow):
 
         # Caja de usuario
         caja = QWidget()
+        caja.setStyleSheet("background: transparent;")
         lu = QVBoxLayout(caja)
         lu.setContentsMargins(20, 12, 20, 0)
         usuario = session.usuario_actual()
         nombre_mostrado = usuario.nombre_completo if usuario else "Invitado"
         self.label_usuario = QLabel(f"Sesión: {nombre_mostrado}")
         self.label_usuario.setObjectName("sidebarUsuario")
+        self.label_usuario.setStyleSheet("background: transparent; color: rgba(255,255,255,0.75); font-size: 11px;")
         lu.addWidget(self.label_usuario)
         btn_salir = QPushButton("Cerrar sesión")
         btn_salir.setObjectName("btnCerrarSesion")
+        btn_salir.setStyleSheet("background: transparent; color: #D4AF37; border: none; text-align: left; font-size: 11px; padding: 4px 0;")
         btn_salir.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_salir.clicked.connect(self._cerrar_sesion)
         lu.addWidget(btn_salir)
