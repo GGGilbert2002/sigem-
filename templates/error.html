@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Error {{ codigo }}{% endblock %}
+{% block contenido %}
+<div style="text-align:center;padding:60px 20px">
+    <div style="font-size:64px;color:#DDD;font-weight:700">{{ codigo }}</div>
+    <p style="font-size:16px;color:#666;margin:16px 0">{{ mensaje }}</p>
+    <a href="/dashboard" class="btn btn-primary">Volver al Dashboard</a>
+</div>
+{% endblock %}

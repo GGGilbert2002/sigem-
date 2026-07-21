@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes{% endblock %}
+{% block contenido %}
+<div class="page-header">
+    <h2>Reportes</h2>
+    <span>Exportación de datos y análisis</span>
+</div>
+<div class="reporte-card">
+    <div class="reporte-icono" style="background:#C0392B">PDF</div>
+    <div class="reporte-info">
+        <div class="reporte-titulo">Reporte Estadístico Completo</div>
+        <div class="reporte-desc">Resumen general + gráficos de género, edad, nivel educativo y municipio</div>
+    </div>
+    <a href="/reportes/descargar/pdf_estadistico" class="btn btn-primary">⬇ Descargar PDF</a>
+</div>
+<div class="reporte-card">
+    <div class="reporte-icono" style="background:#1D6F42">XLS</div>
+    <div class="reporte-info">
+        <div class="reporte-titulo">Listado de Personal (Excel)</div>
+        <div class="reporte-desc">Exporta todos los registros con formato profesional</div>
+    </div>
+    <a href="/reportes/descargar/excel_personal" class="btn btn-primary">⬇ Descargar Excel</a>
+</div>
+<div class="reporte-card">
+    <div class="reporte-icono" style="background:#C0392B">PDF</div>
+    <div class="reporte-info">
+        <div class="reporte-titulo">Listado de Personal (PDF)</div>
+        <div class="reporte-desc">Tabla paginada lista para imprimir o archivar</div>
+    </div>
+    <a href="/reportes/descargar/pdf_personal" class="btn btn-primary">⬇ Descargar PDF</a>
+</div>
+<div class="reporte-card">
+    <div class="reporte-icono" style="background:#1D6F42">XLS</div>
+    <div class="reporte-info">
+        <div class="reporte-titulo">Resumen Estadístico (Excel multi-hoja)</div>
+        <div class="reporte-desc">Anexo estadístico con hojas separadas por categoría</div>
+    </div>
+    <a href="/reportes/descargar/excel_resumen" class="btn btn-primary">⬇ Descargar Excel</a>
+</div>
+<style>
+.reporte-card{background:white;border:1px solid #DDD;border-radius:8px;padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.reporte-icono{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
+.reporte-info{flex:1}
+.reporte-titulo{font-weight:600;font-size:13.5px;color:#1B4332}
+.reporte-desc{font-size:11.5px;color:#888;margin-top:2px}
+</style>
+{% endblock %}

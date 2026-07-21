@@ -13,7 +13,7 @@
         <option value="{{ m.id_municipio }}" {% if municipio_sel == m.id_municipio %}selected{% endif %}>{{ m.nombre }}</option>
         {% endfor %}
     </select>
-    <button type="submit" class="btn btn-primary">Buscar</button>
+    <button type="submit" class="btn btn-secondary">Buscar</button>
     <a href="/personal/nuevo" class="btn btn-primary">+ Nuevo Registro</a>
 </form>
 <table>
@@ -27,11 +27,12 @@
         <td>{{ r.genero }}</td>
         <td>{{ r.municipio }}</td>
         <td><span class="badge badge-ok">{{ r.estatus }}</span></td>
-        <td>
-            <a href="/personal/editar/{{ r.id_personal }}" class="btn btn-secondary btn-sm">✏️ Editar</a>
+        <td style="white-space:nowrap">
+            <a href="/personal/editar/{{ r.id_personal }}" class="btn btn-secondary btn-sm">✏️</a>
             <form method="POST" action="/personal/eliminar/{{ r.id_personal }}" style="display:inline"
-                  onsubmit="return confirm('¿Eliminar el registro de {{ r.nombres }} {{ r.apellidos }}?')">
-                <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                  onsubmit="return confirm('¿Eliminar a {{ r.nombres }} {{ r.apellidos }}?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
             </form>
         </td>
     </tr>

@@ -5,6 +5,8 @@
 {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
 <div class="panel">
 <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
     <p class="seccion-titulo">Datos Personales</p>
     <div class="form-grid">
         <div class="form-group">
@@ -52,7 +54,7 @@
             <select name="id_parroquia" id="sel_parroquia">
                 <option value="">Sin especificar</option>
                 {% if registro and registro.id_parroquia %}
-                <option value="{{ registro.id_parroquia }}" selected>{{ registro.parroquia if registro.parroquia else '' }}</option>
+                <option value="{{ registro.id_parroquia }}" selected>{{ registro.parroquia or '' }}</option>
                 {% endif %}
             </select>
         </div>
@@ -118,7 +120,6 @@ function cargarParroquias(id_municipio) {
             });
         });
 }
-// Cargar parroquias si ya hay municipio seleccionado (modo edición)
 window.onload = () => {
     const sel = document.getElementById('sel_municipio');
     if (sel.value) cargarParroquias(sel.value);
