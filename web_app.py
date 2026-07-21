@@ -61,6 +61,11 @@ with app.app_context():
     try:
         inicializar_base_datos()
         ejecutar_seed(incluir_datos_ficticios=True, cantidad_ficticios=250)
+        # Crear usuario admin si no existe
+        from models.usuario import crear_usuario, existe_algun_usuario
+        if not existe_algun_usuario():
+            crear_usuario("admin", "Administrador del Sistema", "admin123")
+            logger.info("Usuario admin creado correctamente")
         logger.info("Base de datos inicializada correctamente")
     except Exception as e:
         logger.error(f"Error al inicializar la BD: {e}")
